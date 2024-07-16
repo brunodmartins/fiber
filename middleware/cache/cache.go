@@ -123,13 +123,13 @@ func New(config ...Config) fiber.Handler {
 		}
 
 		// Check if entry is expired
-		if e.exp != 0 && ts >= e.exp {
+		if e != nil && e.exp != 0 && ts >= e.exp {
 			deleteKey(key)
 			if cfg.MaxBytes > 0 {
 				_, size := heap.remove(e.heapidx)
 				storedBytes -= size
 			}
-		} else if e.exp != 0 && !hasRequestDirective(c, noCache) {
+		} else if e != nil && e.exp != 0 && !hasRequestDirective(c, noCache) {
 			// Separate body value to avoid msgp serialization
 			// We can store raw bytes with Storage 👍
 			if cfg.Storage != nil {
@@ -193,6 +193,7 @@ func New(config ...Config) fiber.Handler {
 			}
 		}
 
+		e = manager.acquire()
 		// Cache response
 		e.body = utils.CopyBytes(c.Response().Body())
 		e.status = c.Response().StatusCode()
